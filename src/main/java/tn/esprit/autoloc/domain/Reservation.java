@@ -24,4 +24,13 @@ public class Reservation {
 
     @Enumerated(EnumType.STRING)
     private StatutReservation statut;
+
+    @ManyToOne
+    private Vehicule vehicule;
+
+    @OneToOne
+    private Contrat contrat;
+
+    @ManyToOne
+    private Client client;
 }
