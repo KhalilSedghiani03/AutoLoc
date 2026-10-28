@@ -5,7 +5,8 @@ import org.springframework.stereotype.Service;
 import tn.esprit.autoloc.domain.Vehicule;
 import tn.esprit.autoloc.repository.IVehiculeRepository;
 import tn.esprit.autoloc.service.IVehiculeService;
-
+import tn.esprit.autoloc.domain.Vehicule;
+import tn.esprit.autoloc.exception.ResourceNotFoundException;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,10 +27,12 @@ public class VehiculeService implements IVehiculeService {
     }
 
     @Override
-    public Optional<Vehicule> findById(Long id) {
-        return vehiculeRepository.findById(id);
+    public Vehicule findById(Long id) {
+        return vehiculeRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Vehicule", id)
+                );
     }
-
     @Override
     public List<Vehicule> findAll() {
         return vehiculeRepository.findAll();

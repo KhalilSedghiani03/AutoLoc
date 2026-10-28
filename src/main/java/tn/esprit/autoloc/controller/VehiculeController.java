@@ -1,3 +1,4 @@
+
 package tn.esprit.autoloc.controller;
 
 import lombok.RequiredArgsConstructor;
@@ -15,52 +16,44 @@ public class VehiculeController {
 
     private final IVehiculeService vehiculeService;
 
-    // CREATE
+    // Ajouter un véhicule
     @PostMapping
-    public Vehicule create(@RequestBody Vehicule vehicule) {
-        return vehiculeService.save(vehicule);
+    public ResponseEntity<Vehicule> save(@RequestBody Vehicule vehicule) {
+        return ResponseEntity.ok(vehiculeService.save(vehicule));
     }
 
-    // READ - tous les véhicules
-    @GetMapping
-    public List<Vehicule> findAll() {
-        return vehiculeService.findAll();
-    }
-
-    // READ - un véhicule par ID
+    // Rechercher un véhicule par ID
     @GetMapping("/{id}")
     public ResponseEntity<Vehicule> findById(@PathVariable Long id) {
-
-        return vehiculeService.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok(vehiculeService.findById(id));
     }
 
-    // UPDATE
-    @PutMapping("/{id}")
-    public ResponseEntity<Vehicule> update(
-            @PathVariable Long id,
-            @RequestBody Vehicule vehicule) {
+    // Récupérer tous les véhicules
+    @GetMapping
+    public ResponseEntity<List<Vehicule>> findAll() {
+        return ResponseEntity.ok(vehiculeService.findAll());
+    }
 
-        if (!vehiculeService.existsById(id)) {
-            return ResponseEntity.notFound().build();
-        }
-
-        vehicule.setIdVehicule(id);
-
+    // Modifier un véhicule
+    @PutMapping
+    public ResponseEntity<Vehicule> update(@RequestBody Vehicule vehicule) {
         return ResponseEntity.ok(vehiculeService.update(vehicule));
     }
 
-    // DELETE
+    // Supprimer un véhicule
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-
+    public ResponseEntity<Void> deleteById(@PathVariable Long id) {
         if (!vehiculeService.existsById(id)) {
             return ResponseEntity.notFound().build();
         }
 
         vehiculeService.deleteById(id);
-
         return ResponseEntity.noContent().build();
+    }
+
+    // Vérifier si un véhicule existe
+    @GetMapping("/{id}/exists")
+    public ResponseEntity<Boolean> existsById(@PathVariable Long id) {
+        return ResponseEntity.ok(vehiculeService.existsById(id));
     }
 }

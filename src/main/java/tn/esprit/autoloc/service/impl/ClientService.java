@@ -1,13 +1,14 @@
+
 package tn.esprit.autoloc.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import tn.esprit.autoloc.domain.Client;
+import tn.esprit.autoloc.exception.ResourceNotFoundException;
 import tn.esprit.autoloc.repository.IClientRepository;
 import tn.esprit.autoloc.service.IClientService;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -16,18 +17,23 @@ public class ClientService implements IClientService {
     private final IClientRepository clientRepository;
 
     @Override
-    public Client save(Client client) {
+    public Client create(Client client) {
+        if (client.getIdClient() != null) {
+            throw new IllegalArgumentException(
+                    "Un nouveau client ne doit pas avoir d'identifiant"
+            );
+        }
+
+        verifierClient(client);
         return clientRepository.save(client);
     }
 
     @Override
-    public Client update(Client client) {
-        return clientRepository.save(client);
-    }
-
-    @Override
-    public Optional<Client> findById(Long id) {
-        return clientRepository.findById(id);
+    public Client findById(Long id) {
+        return clientRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Client", id)
+                );
     }
 
     @Override
@@ -36,12 +42,38 @@ public class ClientService implements IClientService {
     }
 
     @Override
-    public void deleteById(Long id) {
-        clientRepository.deleteById(id);
+    public Client update(Long id, Client client) {
+        Client existant = findById(id);
+
+        verifierClient(client);
+
+        existant.setNom(client.getNom());
+        existant.setPrenom(client.getPrenom());
+        existant.setEmail(client.getEmail());
+        existant.setTelephone(client.getTelephone());
+        existant.setNumPermis(client.getNumPermis());
+        existant.setDateInscription(client.getDateInscription());
+
+        return clientRepository.save(existant);
     }
 
     @Override
-    public boolean existsById(Long id) {
-        return clientRepository.existsById(id);
+    public void deleteById(Long id) {
+        findById(id);
+        clientRepository.deleteById(id);
+    }
+
+    private void verifierClient(Client client) {
+        if (client.getNom() == null || client.getNom().isBlank()) {
+            throw new IllegalArgumentException(
+                    "Le nom du client est obligatoire"
+            );
+        }
+
+        if (client.getEmail() == null || client.getEmail().isBlank()) {
+            throw new IllegalArgumentException(
+                    "L'email du client est obligatoire"
+            );
+        }
     }
 }

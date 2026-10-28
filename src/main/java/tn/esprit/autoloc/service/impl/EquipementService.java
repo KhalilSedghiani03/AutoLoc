@@ -1,13 +1,14 @@
+
 package tn.esprit.autoloc.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import tn.esprit.autoloc.domain.Equipement;
+import tn.esprit.autoloc.exception.ResourceNotFoundException;
 import tn.esprit.autoloc.repository.IEquipementRepository;
 import tn.esprit.autoloc.service.IEquipementService;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -16,18 +17,23 @@ public class EquipementService implements IEquipementService {
     private final IEquipementRepository equipementRepository;
 
     @Override
-    public Equipement save(Equipement equipement) {
+    public Equipement create(Equipement equipement) {
+        if (equipement.getIdEquipement() != null) {
+            throw new IllegalArgumentException(
+                    "Un nouvel équipement ne doit pas avoir d'identifiant"
+            );
+        }
+
+        verifierEquipement(equipement);
         return equipementRepository.save(equipement);
     }
 
     @Override
-    public Equipement update(Equipement equipement) {
-        return equipementRepository.save(equipement);
-    }
-
-    @Override
-    public Optional<Equipement> findById(Long id) {
-        return equipementRepository.findById(id);
+    public Equipement findById(Long id) {
+        return equipementRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Equipement", id)
+                );
     }
 
     @Override
@@ -36,12 +42,29 @@ public class EquipementService implements IEquipementService {
     }
 
     @Override
-    public void deleteById(Long id) {
-        equipementRepository.deleteById(id);
+    public Equipement update(Long id, Equipement equipement) {
+        Equipement existant = findById(id);
+
+        verifierEquipement(equipement);
+
+        existant.setLibelle(equipement.getLibelle());
+        existant.setVehicule(equipement.getVehicule());
+
+        return equipementRepository.save(existant);
     }
 
     @Override
-    public boolean existsById(Long id) {
-        return equipementRepository.existsById(id);
+    public void deleteById(Long id) {
+        findById(id);
+        equipementRepository.deleteById(id);
+    }
+
+    private void verifierEquipement(Equipement equipement) {
+        if (equipement.getLibelle() == null
+                || equipement.getLibelle().isBlank()) {
+            throw new IllegalArgumentException(
+                    "Le libellé de l'équipement est obligatoire"
+            );
+        }
     }
 }

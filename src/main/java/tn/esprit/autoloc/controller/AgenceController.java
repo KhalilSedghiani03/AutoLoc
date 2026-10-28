@@ -1,3 +1,4 @@
+
 package tn.esprit.autoloc.controller;
 
 import lombok.RequiredArgsConstructor;
@@ -15,52 +16,36 @@ public class AgenceController {
 
     private final IAgenceService agenceService;
 
-    // CREATE
+    // Ajouter une agence
     @PostMapping
-    public Agence create(@RequestBody Agence agence) {
-        return agenceService.save(agence);
+    public ResponseEntity<Agence> create(@RequestBody Agence agence) {
+        return ResponseEntity.ok(agenceService.create(agence));
     }
 
-    // READ - tous les agences
-    @GetMapping
-    public List<Agence> findAll() {
-        return agenceService.findAll();
-    }
-
-    // READ - une agence par ID
+    // Rechercher une agence par ID
     @GetMapping("/{id}")
     public ResponseEntity<Agence> findById(@PathVariable Long id) {
-
-        return agenceService.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok(agenceService.findById(id));
     }
 
-    // UPDATE
+    // Récupérer toutes les agences
+    @GetMapping
+    public ResponseEntity<List<Agence>> findAll() {
+        return ResponseEntity.ok(agenceService.findAll());
+    }
+
+    // Modifier une agence
     @PutMapping("/{id}")
     public ResponseEntity<Agence> update(
             @PathVariable Long id,
             @RequestBody Agence agence) {
-
-        if (!agenceService.existsById(id)) {
-            return ResponseEntity.notFound().build();
-        }
-
-        agence.setIdAgence(id);
-
-        return ResponseEntity.ok(agenceService.update(agence));
+        return ResponseEntity.ok(agenceService.update(id, agence));
     }
 
-    // DELETE
+    // Supprimer une agence
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-
-        if (!agenceService.existsById(id)) {
-            return ResponseEntity.notFound().build();
-        }
-
+    public ResponseEntity<Void> deleteById(@PathVariable Long id) {
         agenceService.deleteById(id);
-
         return ResponseEntity.noContent().build();
     }
 }
