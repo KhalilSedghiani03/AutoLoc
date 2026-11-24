@@ -3,10 +3,19 @@ package tn.esprit.autoloc.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import tn.esprit.autoloc.domain.Vehicule;
-import tn.esprit.autoloc.exception.ResourceNotFoundException;
-import tn.esprit.autoloc.repository.IVehiculeRepository;
 
+import tn.esprit.autoloc.domain.Vehicule;
+import tn.esprit.autoloc.domain.Equipement;
+import tn.esprit.autoloc.domain.Maintenance;
+
+import tn.esprit.autoloc.exception.ResourceNotFoundException;
+
+import tn.esprit.autoloc.repository.IVehiculeRepository;
+import tn.esprit.autoloc.repository.IEquipementRepository;
+import tn.esprit.autoloc.repository.IMaintenanceRepository;
+
+import tn.esprit.autoloc.web.dto.VehiculeResponseDTO;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
@@ -14,6 +23,8 @@ import java.util.List;
 public class VehiculeServiceImpl implements IVehiculeService {
 
     private final IVehiculeRepository vehiculeRepository;
+    private final IEquipementRepository equipementRepository;
+    private final IMaintenanceRepository maintenanceRepository;
 
     @Override
     public Vehicule save(Vehicule vehicule) {
@@ -80,5 +91,62 @@ public class VehiculeServiceImpl implements IVehiculeService {
                     "Le tarif journalier ne peut pas être négatif"
             );
         }
+    }
+
+    // Affecter un véhicule à un équipement
+    @Transactional
+    @Override
+    public VehiculeResponseDTO affecterVehiculeAEquipement(
+            Long idVehicule,
+            Long idEquipement) {
+
+        Vehicule vehicule = findById(idVehicule);
+
+        Equipement equipement = equipementRepository.findById(idEquipement)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Equipement", idEquipement));
+
+        equipement.setVehicule(vehicule);
+        equipementRepository.save(equipement);
+
+        return toDTO(vehicule);
+    }
+
+    // Affecter une maintenance à un véhicule
+    @Override
+    @Transactional
+    public VehiculeResponseDTO affecterMaintenanceAvehicule(
+            String description,
+            String immatriculation) {
+
+        Vehicule vehicule = vehiculeRepository
+                .findByImmatriculation(immatriculation)
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "Véhicule introuvable : " + immatriculation));
+
+        Maintenance maintenance = new Maintenance();
+        maintenance.setDescription(description);
+        maintenance.setVehicule(vehicule);
+
+        maintenanceRepository.save(maintenance);
+
+        return toDTO(vehicule);
+    }
+
+    // Conversion Entity vers DTO
+    private VehiculeResponseDTO toDTO(Vehicule vehicule) {
+        return new VehiculeResponseDTO(
+                vehicule.getIdVehicule(),
+                vehicule.getImmatriculation(),
+                vehicule.getMarque(),
+                vehicule.getModele(),
+                vehicule.getCategorie(),
+                vehicule.getTarifJournalier(),
+                vehicule.getStatut(),
+                vehicule.getAgence() != null
+                        ? vehicule.getAgence().getIdAgence()
+                        : null
+        );
     }
 }
